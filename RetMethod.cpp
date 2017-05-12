@@ -237,7 +237,7 @@ lemur::retrieval::RetMethod::RetMethod(const Index &dbIndex,
 
     qryParam.fbMethod = RetParameter::MIXTURE;
     RM="MIX";// *** Query Likelihood adjusted score method *** //
-    qryParam.fbCoeff = 0.9;//RetParameter::defaultFBCoeff;//default = 0.5
+    qryParam.fbCoeff = RetParameter::defaultFBCoeff;//default = 0.5
     //qryParam.fbCoeff =0.1;
     qryParam.fbPrTh = RetParameter::defaultFBPrTh;
     qryParam.fbPrSumTh = RetParameter::defaultFBPrSumTh;
@@ -1691,7 +1691,7 @@ vector<double> lemur::retrieval::RetMethod::extractKeyWord(int newDocId)
 
 }
 
-void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep &origRep, vector<int> relJudgDocs, vector<int> nonRelJudgDocs, int docID)
+void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep &origRep, vector<int> relJudgDocs, vector<int> nonRelJudgDocs, int docID,double fbcoef)
 {
     vector<pair<double,pair<int,bool> > > bScoreIdisRel,aScoreIdisRel;
 
@@ -1783,7 +1783,7 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
 
 
     lemur::langmod::MLUnigramLM *fblm = new lemur::langmod::MLUnigramLM(lmCounter, ind.termLexiconID());
-    qmodel->interpolateWith(*fblm, (1-qryParam.fbCoeff), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
+    qmodel->interpolateWith(*fblm, (1-fbcoef), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
     /********************************************************/
     for(int i = 0 ; i < relJudgDocs.size(); i++)
     {
@@ -1820,7 +1820,7 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
     {
         cerr<<"\n\n\nHEREEE\n\n\n";
         QueryModel *qr2 = dynamic_cast<QueryModel *> (&origRep);
-        qr2->interpolateWith(*fblm, (1-qryParam.fbCoeff), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
+        qr2->interpolateWith(*fblm, (1-fbcoef), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
     }
 
     delete fblm;

@@ -209,7 +209,7 @@ void computeRSMethods(Index* ind)
 #define COMPAVG 0
 
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "_NegFB_2_UpdateWithRel_logistic_"; //RM1(c=n=100)
+    string methodName = "_NegFB_2_UpdateWithRelMIX_logistic_"; //RM1(c=n=100)
     outFilename += methodName;
     outFilename += "_lambda{0.1}_#perQuery:{5-25(5)}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
@@ -236,6 +236,7 @@ void computeRSMethods(Index* ind)
                     double topPos = -1;//n//c in rm1
                     //double SelectedWord4Q = 5;
 
+
                     double alpha = -1;
                     for(double c1 = 0.1 ; c1< 0.21 ;c1 += 0.05)//inc//3
                     //double c1 = 0.2;
@@ -244,8 +245,6 @@ void computeRSMethods(Index* ind)
                         for(double c2 = 0.01 ; c2 < 0.08 ; c2+=0.03)//dec //3
                         //double c2 = 0.04;
                         {
-                            //if(c2 >= c1)
-                            //	break;
 
                             //myMethod->setThreshold(init_thr);
                             myMethod->setC2(c2);
@@ -259,6 +258,9 @@ void computeRSMethods(Index* ind)
                                     myMethod->setTop4EachQuery(SelectedWord4Q);//v//feedbackTermCount sets
                                     myMethod->setTopWords4EachQueryTerm(topPos);//n
                                     myMethod->topsCinRM1 = topPos;//c
+
+                                    //myMethod->setCoeffParam(fbCoef);/*****/set DEFAULT!!!!
+                                    myMethod->alphaCoef = alpha;
 
                                     //myMethod->setNumberOfPositiveSelectedTopWordAndFBcount(topPos);//n
                                     //myMethod->setNumberOfTopSelectedWord4EacQword(SelectedWord4Q);//v
@@ -284,8 +286,6 @@ void computeRSMethods(Index* ind)
                                     double relRetCounter = 0 , retCounter = 0 , relCounter = 0;
                                     vector<double> queriesPrecision,queriesRecall;
 
-                                    myMethod->setCoeffParam(fbCoef);
-                                    myMethod->alphaCoef = alpha;
 
                                     while(qs->hasMore())
                                     {
@@ -381,7 +381,7 @@ void computeRSMethods(Index* ind)
 
                                                     if( relJudgDocs.size() > 1 )
                                                     {
-                                                        myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), relJudgDocs, nonRelJudgDocs, docID );
+                                                        myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), relJudgDocs, nonRelJudgDocs, docID ,fbCoef);
                                                     }
 
                                                 }

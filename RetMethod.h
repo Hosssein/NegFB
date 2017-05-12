@@ -726,7 +726,7 @@ public:
                                  vector<int> relJudglDoc , vector<int> nonReljudgDoc , int mode);
     virtual float computeProfDocSim(lemur::api::TextQueryRep *origRep,int docID ,vector<int>relDocs ,vector<int>nonRelDocs , bool newNonRel,bool newRel);
 
-    virtual void checkInformativeDoc(lemur::api::TextQueryRep &origRep , vector<int> , vector<int> nonRelJudgDocs, int );
+    virtual void checkInformativeDoc(lemur::api::TextQueryRep &origRep , vector<int> , vector<int> nonRelJudgDocs, int , double fbcoef);
 
 
 
