@@ -230,30 +230,30 @@ void computeRSMethods(Index* ind)
             {
                 //for( double topPos = 5; topPos <=15 ; topPos += 5 )//3//15 khube //n(50,100) for each query term//c in RM1
                 {
-                    for(double SelectedWord4Q = 5; SelectedWord4Q <= 25 ; SelectedWord4Q += 5)//2 //v(10,25) for each query(whole)
+                    //for(double SelectedWord4Q = 5; SelectedWord4Q <= 25 ; SelectedWord4Q += 5)//2 //v(10,25) for each query(whole)
                     {
                         double fbCoef = 0.1;//lambda
                         double topPos = -1;//n//c in rm1
-                        //double SelectedWord4Q = 5;
+                        double SelectedWord4Q = 5;
 
                         double alpha = -1;
-                        for(double c1 = 0.1 ; c1< 0.21 ;c1 += 0.05)//inc//3
-                            //double c1 = 0.2;
+                        //for(double c1 = 0.1 ; c1< 0.21 ;c1 += 0.05)//inc//3
+                            double c1 = 0.2;
                         {
                             myMethod->setC1(c1);
-                            for(double c2 = 0.01 ; c2 < 0.08 ; c2+=0.03)//dec //3
-                                //double c2 = 0.04;
+                            //for(double c2 = 0.01 ; c2 < 0.08 ; c2+=0.03)//dec //3
+                                double c2 = 0.04;
                             {
                                 //if(c2 >= c1)
                                 //	break;
 
                                 //myMethod->setThreshold(init_thr);
                                 myMethod->setC2(c2);
-                                for(int numOfShownNonRel = 2; numOfShownNonRel< 6; numOfShownNonRel+=3 )//2
-                                    //int numOfShownNonRel = 2;
+                                //for(int numOfShownNonRel = 2; numOfShownNonRel< 6; numOfShownNonRel+=3 )//2
+                                    int numOfShownNonRel = 2;
                                 {
-                                    for(int numOfnotShownDoc = 100 ;numOfnotShownDoc <= 401 ; numOfnotShownDoc+= 150)//3
-                                        //int numOfnotShownDoc = 250;
+                                    //for(int numOfnotShownDoc = 100 ;numOfnotShownDoc <= 401 ; numOfnotShownDoc+= 150)//3
+                                        int numOfnotShownDoc = 250;
                                     {
                                         myMethod->setThreshold(thresh);
                                         myMethod->setTop4EachQuery(SelectedWord4Q);//v//feedbackTermCount sets
@@ -306,10 +306,9 @@ void computeRSMethods(Index* ind)
 
                                             Document *d = qs->nextDoc();
                                             q = new TextQuery(*d);
-                                            //textq = new TextQuery(*d);
-
                                             QueryRep *qr = myMethod->computeQueryRep(*q);
-                                            //QueryRep *qrtest = myMethod->computeQueryRep(*q);
+
+
 
                                             cout<<"qid: "<<q->id()<<endl;
 
@@ -386,16 +385,13 @@ void computeRSMethods(Index* ind)
 
                                                         if( relJudgDocs.size() > 1 )
                                                         {
-                                                            //TextQuery *qtest = new TextQuery(*d);
-                                                            QueryRep *qrtest =(myMethod->computeQueryRep(*q));
+                                                            //QueryRep *qrtest = myMethod->computeQueryRep(*q);
+                                                            //QueryRep *qrtest = new QueryRep();
+                                                            //*qrtest = *qr;
 
-                                                            //cerr<<"b: "<<&qrtest<<" "<<&qr<<endl;
+                                                            myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), relJudgDocs, nonRelJudgDocs, docID );
+                                                            //delete qrtest;
 
-
-                                                            myMethod->checkInformativeDoc( (TextQueryRep*)(qr), (TextQueryRep*)qrtest, relJudgDocs, nonRelJudgDocs, docID );
-
-                                                            delete qrtest;
-                                                            //cerr<<"a: "<<&qrtest<<" "<<&qr<<endl;
 
                                                         }
 
@@ -408,17 +404,17 @@ void computeRSMethods(Index* ind)
                                                         break;
                                                     }
 
-                                                    /*if (results.size() % 5 == 0 )
+                                                    if (results.size() % 5 == 0 )
                                                     {
                                                         if(lastNewRelSize4ProfUpdating != relJudgDocs.size())//for efficiently purpose
                                                         {
-                                                            //cerr<<"profUpd\n";
-                                                            myMethod->updateProfile(*((TextQueryRep *)(qr)),relJudgDocs , nonRelJudgDocs );
+                                                            cerr<<"profUpd\n";
+                                                            myMethod->updateProfile(*((TextQueryRep *)(qr)), relJudgDocs, nonRelJudgDocs );
                                                             lastNewRelSize4ProfUpdating = relJudgDocs.size();
 
                                                         }
 
-                                                    }*/
+                                                    }
 
 
                                                 }

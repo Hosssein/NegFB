@@ -566,6 +566,14 @@ public:
     }
 
 
+    void setColQLikelihood(double col)
+    {
+        colQLikelihood = col;
+    }
+    void setColKLComputed(bool flag)
+    {
+        colKLComputed = flag;
+    }
 
 protected:
     // For Query likelihood adjusted score
@@ -718,7 +726,7 @@ public:
                                  vector<int> relJudglDoc , vector<int> nonReljudgDoc , int mode);
     virtual float computeProfDocSim(lemur::api::TextQueryRep *origRep,int docID ,vector<int>relDocs ,vector<int>nonRelDocs , bool newNonRel,bool newRel);
 
-    void checkInformativeDoc(TextQueryRep * , TextQueryRep *, vector<int> , vector<int> nonRelJudgDocs, int );
+    virtual void checkInformativeDoc(lemur::api::TextQueryRep &origRep , vector<int> , vector<int> nonRelJudgDocs, int );
 
 
 
