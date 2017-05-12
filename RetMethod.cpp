@@ -1693,7 +1693,6 @@ vector<double> lemur::retrieval::RetMethod::extractKeyWord(int newDocId)
 
 void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep &origRep, vector<int> relJudgDocs, vector<int> nonRelJudgDocs, int docID)
 {
-
     vector<pair<double,pair<int,bool> > > bScoreIdisRel,aScoreIdisRel;
 
     for(int i = 0 ; i < relJudgDocs.size(); i++)
@@ -1764,78 +1763,27 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
     for (int i = 0; i < cc; i++)
     {
         lmCounter.incCount(selectedWordProbId[i].second , selectedWordProbId[i].first/totalScore);
-        cerr<<ind.term(selectedWordProbId[i].second)<<" " <<selectedWordProbId[i].first/totalScore<<" , ";
+        //cerr<<ind.term(selectedWordProbId[i].second)<<" " <<selectedWordProbId[i].first/totalScore<<" , ";
     }
-    cerr<<endl;
+    //cerr<<endl;
 
     /******************/
     //copy query
     QueryModel *qmodel = new QueryModel(ind);
     qmodel->setColQLikelihood(0.0);
-
     origRep.startIteration();
-
     while (origRep.hasMore())
     {
         QueryTerm *qt = origRep.nextTerm();
-        if(qt->id() != 0)
+        if(qt->id() != 0)//no oov
             qmodel->setCount(qt->id(),qt->weight());
     }
     qmodel->colQueryLikelihood();
     qmodel->setColKLComputed(false);
 
-     /******************/
 
-    //QueryModel *qr = dynamic_cast<QueryModel *> (&tqrtest);
     lemur::langmod::MLUnigramLM *fblm = new lemur::langmod::MLUnigramLM(lmCounter, ind.termLexiconID());
-
-
-    cerr<<"before test: ";
-    qmodel->startIteration();
-    while(qmodel->hasMore())
-    {
-        QueryTerm *qt = qmodel->nextTerm();
-        cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
-        delete qt;
-    }
-    cerr<<endl;
-
-    cerr<<"before orig: ";
-    origRep.startIteration();
-    while(origRep.hasMore())
-    {
-        QueryTerm *qt = origRep.nextTerm();
-        cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
-        delete qt;
-    }
-    cerr<<endl<<endl;
-
-    /*******************/
     qmodel->interpolateWith(*fblm, (1-qryParam.fbCoeff), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
-    /******************/
-
-    cerr<<"after test: ";
-    qmodel->startIteration();
-    while(qmodel->hasMore())
-    {
-        QueryTerm *qt = qmodel->nextTerm();
-        cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
-        delete qt;
-    }
-    cerr<<endl;
-
-    cerr<<"after orig: ";
-    origRep.startIteration();
-    while(origRep.hasMore())
-    {
-        QueryTerm *qt = origRep.nextTerm();
-        cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
-        delete qt;
-    }
-    cerr<<endl<<endl<<endl;
-
-
-
     /********************************************************/
     for(int i = 0 ; i < relJudgDocs.size(); i++)
     {
@@ -1848,6 +1796,7 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
         aScoreIdisRel.push_back(make_pair<double,pair<int, bool> >(sc,make_pair<int,bool>(nonRelJudgDocs[i],false) ));
     }
 
+
     std::sort(aScoreIdisRel.begin(), aScoreIdisRel.end(), pairpairCompare);
 
     //calcute AP
@@ -1857,7 +1806,6 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
     {
         if(aScoreIdisRel[i].second.second == true)
         {
-            //cerr<<i<<" ";
             relCount++;
             double ap = (relCount)/(i+1.0);
             APvec.push_back(ap);
@@ -1871,50 +1819,12 @@ void lemur::retrieval::RetMethod::checkInformativeDoc( lemur::api::TextQueryRep 
     if(aAP > bAP)
     {
         cerr<<"\n\n\nHEREEE\n\n\n";
-        int qqq2=0;
-        origRep.startIteration();
-        while(origRep.hasMore())
-        {
-            qqq2++;
-            origRep.nextTerm();
-        }
-        cerr<<"ap before org query size: "<<qqq2<<endl;
-
-
-        COUNT_T numTerms = ind.termCountUnique();
-        lemur::utility::ArrayCounter<double> lmCounter(numTerms+1);
-        for (int i = 0; i < cc; i++)
-            lmCounter.incCount(selectedWordProbId[i].second , selectedWordProbId[i].first/totalScore);
-
-
         QueryModel *qr2 = dynamic_cast<QueryModel *> (&origRep);
-        lemur::langmod::MLUnigramLM *fblm2 = new lemur::langmod::MLUnigramLM(lmCounter, ind.termLexiconID());
-        qr2->interpolateWith(*fblm2, (1-qryParam.fbCoeff), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
-
-
-        qqq2=0;
-        origRep.startIteration();
-        while(origRep.hasMore())
-        {
-            qqq2++;
-            origRep.nextTerm();
-        }
-        cerr<<"ap after org query size: "<<qqq2<<endl;
-
-
-
-        qr2->startIteration();
-        while(qr2->hasMore())
-        {
-            QueryTerm *qt = qr2->nextTerm();
-            cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
-        }
-        cerr<<endl<<endl;
-
+        qr2->interpolateWith(*fblm, (1-qryParam.fbCoeff), cc/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
     }
 
-    delete qmodel;//////////
-
+    delete fblm;
+    delete qmodel;
 }
 
 float lemur::retrieval::RetMethod::computeProfDocSim(lemur::api::TextQueryRep *textQR,int docID ,
