@@ -1733,12 +1733,12 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
 
     for(int i = 0 ; i < relJudgDocs.size(); i++)
     {
-        double sc = scoreDoc(*pureQRep ,relJudgDocs[i]);
+        double sc = scoreDoc(origRep ,relJudgDocs[i]);
         bScoreIdisRel.push_back(make_pair<double,pair<int, bool> >(sc,make_pair<int,bool>(relJudgDocs[i],true) ));
     }
     for(int i = 0 ; i < nonRelJudgDocs.size(); i++)
     {
-        double sc = scoreDoc(*pureQRep ,nonRelJudgDocs[i]);
+        double sc = scoreDoc(origRep ,nonRelJudgDocs[i]);
         bScoreIdisRel.push_back(make_pair<double,pair<int, bool> >(sc,make_pair<int,bool>(nonRelJudgDocs[i],false) ));
     }
 
@@ -1808,7 +1808,7 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
 
     /******************/
     //copy query
-    /*QueryModel *qmodel = new QueryModel(ind);
+    QueryModel *qmodel = new QueryModel(ind);
     qmodel->setColQLikelihood(0.0);
     origRep.startIteration();
     while (origRep.hasMore())
@@ -1821,9 +1821,9 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
     }
     qmodel->colQueryLikelihood();
     qmodel->setColKLComputed(false);
-    */
+
     //
-    QueryModel *qmodel = dynamic_cast<QueryModel *> (pureQRep);
+    //QueryModel *qmodel = dynamic_cast<QueryModel *> (pureQRep);
 
 
     lemur::langmod::MLUnigramLM *fblm = new lemur::langmod::MLUnigramLM(lmCounter, ind.termLexiconID());
