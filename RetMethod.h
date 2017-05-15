@@ -721,12 +721,11 @@ public:
                                  const lemur::api::DocIDSet &relDocs, const lemur::api::DocIDSet &nonRelDocs);
 
     virtual void updateProfile(lemur::api::TextQueryRep &origRep,
-                               vector<int> relJudglDoc ,vector<int> nonReljudgDoc);
-    virtual void updateThreshold(lemur::api::TextQueryRep &origRep,
-                                 vector<int> relJudglDoc , vector<int> nonReljudgDoc , int mode);
+                               vector<int> relJudglDoc, vector<double> relJudgScore ,vector<int> nonReljudgDoc);
+    virtual void updateThreshold(vector<int> relJudglDoc , vector<int> nonReljudgDoc , int mode);
     virtual float computeProfDocSim(lemur::api::TextQueryRep *origRep,int docID ,vector<int>relDocs ,vector<int>nonRelDocs , bool newNonRel,bool newRel);
 
-    virtual void checkInformativeDoc(lemur::api::TextQueryRep &origRep , vector<int> , vector<int> nonRelJudgDocs, int , double fbcoef);
+    virtual bool checkInformativeDoc(lemur::api::TextQueryRep &origRep, lemur::api::TextQueryRep *copy, vector<int>, vector<int> nonRelJudgDocs, int , double fbcoef, bool isRel, double &sc, int &maxNonRelId);
 
 
 
