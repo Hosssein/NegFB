@@ -1729,6 +1729,9 @@ vector<double> lemur::retrieval::RetMethod::extractKeyWord(int newDocId)
 
 bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &origRep,lemur::api::TextQueryRep *pureQRep, vector<int> relJudgDocs, vector<int> nonRelJudgDocs, int docID, double fbcoef, bool isRel, double &apSc,int &maxNonRelId)
 {
+    return false;
+
+
     vector<pair<double,pair<int,bool> > > bScoreIdisRel,aScoreIdisRel;
 
     for(int i = 0 ; i < relJudgDocs.size(); i++)

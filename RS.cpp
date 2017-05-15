@@ -222,7 +222,7 @@ void computeRSMethods(Index* ind)
 #define COMPAVG 0
 
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "_NegFB_2_noPure_"; //RM1(c=n=100)
+    string methodName = "_Logistic_noPure_"; //RM1(c=n=100)
     outFilename += methodName;
     outFilename += "_lambda{0.1}_#perQuery:{10-50(15)}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
@@ -461,6 +461,11 @@ void computeRSMethods(Index* ind)
 
                                                 if (results.size() % 5 == 0 )
                                                 {
+                                                    //for loglogistc
+                                                    updatedDocForUpdating.clear();
+                                                    updatedDocForUpdating.assign(relJudgDocs.begin(), relJudgDocs.end());
+                                                    updatedDocForUpdatingScore.assign(updatedDocForUpdatingScore.size(), 1.0);
+
                                                     if(lastNewRelSize4ProfUpdating != updatedDocForUpdating.size())//for efficiently purpose
                                                     {
                                                         //cerr<<"profUpd\n";
