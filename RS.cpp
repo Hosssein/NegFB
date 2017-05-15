@@ -449,7 +449,7 @@ void computeRSMethods(Index* ind)
 
                                                     QueryRep *hqr = myMethod->computeQueryRep(*q);
                                                     bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, docID ,fbCoef, isRel, apScore, maxNonRelId);
-                                                    //delete hqr;
+                                                    delete hqr;
 
                                                     if(iflag)
                                                     {
@@ -476,7 +476,7 @@ void computeRSMethods(Index* ind)
                                                         }
                                                         else //sort
                                                         {
-                                                            cerr<<"\nELSE\n";
+                                                            //cerr<<"\nELSE\n";
                                                             vector<pair<double,int> > updatedDocs;
                                                             for(int i = 0 ; i < updatedDocForUpdating.size() ; i++)
                                                                 updatedDocs.push_back(make_pair<double,int>(updatedDocForUpdatingScore[i], updatedDocForUpdating[i]) );
@@ -489,9 +489,9 @@ void computeRSMethods(Index* ind)
                                                             {
                                                                 fbids.push_back(updatedDocs[i].second);
                                                                 fbScores.push_back(updatedDocs[i].first);
-                                                                cerr<<updatedDocs[i].second<<" "<<updatedDocs[i].first<<" , ";
+                                                                //cerr<<updatedDocs[i].second<<" "<<updatedDocs[i].first<<" , ";
                                                             }
-                                                            cerr<<endl;
+                                                            //cerr<<endl;
 
                                                             myMethod->updateProfile(*((TextQueryRep *)(qr)), fbids, fbScores, nonRelJudgDocs );
                                                         }
