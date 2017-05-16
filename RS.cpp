@@ -76,6 +76,8 @@ extern int updatingThresholdMode;
 
 int lastNewRelSize4ProfUpdating = 0;
 
+vector<pair<double,pair<int,bool> > > bScoreIdisRel;
+
 bool isRellNearest;
 //int nonRelCount = -1;
 
@@ -222,7 +224,7 @@ void computeRSMethods(Index* ind)
 #define COMPAVG 0
 
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "_Logistic_noPure_"; //RM1(c=n=100)
+    string methodName = "_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
     outFilename += methodName;
     outFilename += "_lambda{0.1}_#perQuery:{10-50(15)}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
@@ -261,8 +263,8 @@ void computeRSMethods(Index* ind)
 
                             //myMethod->setThreshold(init_thr);
                             myMethod->setC2(c2);
-                            for(int numOfShownNonRel = 2; numOfShownNonRel< 6; numOfShownNonRel+=3 )//2
-                            //int numOfShownNonRel = 2;
+                            //for(int numOfShownNonRel = 2; numOfShownNonRel< 6; numOfShownNonRel+=3 )//2
+                            int numOfShownNonRel = 2;
                             {
                                 for(int numOfnotShownDoc = 100 ;numOfnotShownDoc <= 401 ; numOfnotShownDoc+= 150)//3
                                 //int numOfnotShownDoc = 250;
@@ -304,7 +306,7 @@ void computeRSMethods(Index* ind)
 
                                     while(qs->hasMore())
                                     {
-                                        myMethod->collNearestTerm.clear();
+                                        //myMethod->collNearestTerm.clear();
 
                                         myMethod->setThreshold(thresh);
 
@@ -315,9 +317,6 @@ void computeRSMethods(Index* ind)
 
                                         vector<int> relJudgDocs,nonRelJudgDocs,updatedDocForUpdating;
                                         vector<double> updatedDocForUpdatingScore;
-                                        double maxNonRelScore =-10;
-                                        int maxNonRelId=-10;
-                                        bool isFirst = true;
 
                                         //vector<pair<int , double> > judgedIdScore;//rel and nonrel
                                         results.clear();
@@ -325,6 +324,8 @@ void computeRSMethods(Index* ind)
                                         Document *d = qs->nextDoc();
                                         q = new TextQuery(*d);
                                         QueryRep *qr = myMethod->computeQueryRep(*q);
+
+                                        bScoreIdisRel.clear();
 
 
                                         cout<<"qid: "<<q->id()<<endl;
@@ -359,12 +360,9 @@ void computeRSMethods(Index* ind)
                                         for(int i = 0 ; i<docids.size(); i++) //compute for docs which have queryTerm
                                         {
                                             int docID = docids[i];
-
                                             float sim = myMethod->computeProfDocSim(((TextQueryRep *)(qr)), docID, relJudgDocs, nonRelJudgDocs , newNonRel,newRel);
-
                                             if(sim >=  myMethod->getThreshold() )
                                             {
-
                                                 numberOfNotShownDocs=0;
                                                 bool isRel = false;
 
@@ -375,7 +373,6 @@ void computeRSMethods(Index* ind)
 #endif
                                                 if( hfit != relDocs.end() )//found!
                                                 {
-                                                    //cerr<<"rel\n";
                                                     relDocs.erase(hfit);
                                                     isRel = true;
                                                     newNonRel = false;
@@ -385,17 +382,6 @@ void computeRSMethods(Index* ind)
                                                 }
                                                 else
                                                 {
-                                                    //cerr<<"nonrel\n";
-                                                    if(isFirst)
-                                                      {
-                                                        if(sim > maxNonRelScore)
-                                                        {
-                                                            //cerr<<"\nelse: " <<docID<<" "<<sim<<endl;
-                                                            maxNonRelScore = sim;
-                                                            maxNonRelId = docID;
-                                                        }
-                                                    }
-
                                                     nonRelJudgDocs.push_back(docID);
                                                     newNonRel = true;
                                                     newRel = false;
@@ -406,101 +392,80 @@ void computeRSMethods(Index* ind)
                                                             myMethod->updateThreshold(relJudgDocs , nonRelJudgDocs ,0);//inc thr
                                                             numberOfShownNonRelDocs = 0;
                                                         }
-
-                                                    /*if( relJudgDocs.size() > 1 )
-                                                    {
-                                                        bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), relJudgDocs, nonRelJudgDocs, docID ,fbCoef);
-                                                        if(iflag)
-                                                            updatedDocForUpdating.push_back(docID);
-
-                                                    }*/
-
                                                 }
 
                                                 results.PushValue(docID , sim);
 
                                                 if(results.size() > 200)
                                                 {
-                                                    cout<<"BREAKKKKKKKKKK because of results size > 200\n";
+                                                    cerr<<"BREAKKKKKKKKKK because of results size > 200\n";
                                                     break;
                                                 }
 
+                                                QueryRep *myhqr = myMethod->computeQueryRep(*q);
+                                                double dscore = myMethod->scoreDoc(*myhqr, docID);
+                                                delete myhqr;
+                                                bScoreIdisRel.push_back(make_pair<double,pair<int, bool> >(dscore,make_pair<int,bool>(docID,isRel) ));
+                                                //bScoreIdisRel.insert(std::upper_bound(bScoreIdisRel.begin(), bScoreIdisRel.end(),dscore),dscore);
 
-                                                if( relJudgDocs.size() > 2 )
-                                                {
-                                                    if(isFirst)
-                                                    {
-                                                        cerr<<"isfirst: "<<isRel<<" "<<docID<<" "<<sim<<endl;
-
-                                                        for(int i = 0 ; i < relJudgDocs.size(); i++)
-                                                        {
-                                                            updatedDocForUpdating.push_back(relJudgDocs[i]);
-                                                            updatedDocForUpdatingScore.push_back(1.0);
-                                                        }
-                                                        if(maxNonRelId != -10)
-                                                        {
-                                                            cerr<<"maxNonRel "<<maxNonRelId<<endl;
-                                                            updatedDocForUpdating.push_back(maxNonRelId);
-                                                            updatedDocForUpdatingScore.push_back(0.004);
-                                                        }
-                                                        isFirst = false;
-                                                    }
-                                                    double apScore = -1.0;
-
-                                                    QueryRep *hqr = myMethod->computeQueryRep(*q);
-                                                    bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, docID ,fbCoef, isRel, apScore, maxNonRelId);
-                                                    delete hqr;
-
-                                                    if(iflag)
-                                                    {
-                                                        updatedDocForUpdating.push_back(docID);
-                                                        updatedDocForUpdatingScore.push_back(apScore);
-                                                        //cerr<<docID<<" "<<apScore<<endl;
-                                                    }
-                                                }
 
                                                 if (results.size() % 5 == 0 )
                                                 {
-                                                    //for loglogistc
                                                     updatedDocForUpdating.clear();
-                                                    updatedDocForUpdating.assign(relJudgDocs.begin(), relJudgDocs.end());
-                                                    updatedDocForUpdatingScore.assign(updatedDocForUpdatingScore.size(), 1.0);
+                                                    updatedDocForUpdatingScore.clear();
 
-                                                    if(lastNewRelSize4ProfUpdating != updatedDocForUpdating.size())//for efficiently purpose
+                                                    vector<pair<double,pair<int, bool> > >apidrelDocs;
+
+                                                    if( relJudgDocs.size() > 1 && nonRelJudgDocs.size() > 0 )
                                                     {
-                                                        //cerr<<"profUpd\n";
+                                                        std::sort(bScoreIdisRel.begin(), bScoreIdisRel.end(), pairpairCompare);
+
+                                                        for(int j = 0 ;j < relJudgDocs.size(); j++)//rel docs
+                                                        {
+                                                            QueryRep *hqr = myMethod->computeQueryRep(*q);
+                                                            double apScore = -10;
+                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, relJudgDocs[j] ,fbCoef, true, apScore);
+                                                            //delete hqr;
+                                                            if(iflag)
+                                                            {
+                                                                apidrelDocs.push_back(make_pair<double,pair<int, bool> >(apScore,make_pair<int,bool>(relJudgDocs[j],true) ));
+                                                                //cerr<<"true "<<apScore<<" "<<relJudgDocs[j]<<" , ";
+                                                            }
+                                                        }
+
+                                                        //cerr<<"ss "<<nonRelJudgDocs.size();
+                                                        for(int j = 0 ;j < nonRelJudgDocs.size(); j++)//nonRel docs
+                                                        {
+                                                            //cerr<<"nonREEEEELLL\n";
+                                                            QueryRep *hqr = myMethod->computeQueryRep(*q);
+                                                            double apScore = -10;
+                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, nonRelJudgDocs[j] ,fbCoef, false, apScore);
+                                                            //delete hqr;
+                                                            if(iflag)
+                                                            {
+                                                                apidrelDocs.push_back(make_pair<double,pair<int, bool> >(apScore,make_pair<int,bool>(nonRelJudgDocs[j],false) ));
+                                                                //cerr<<"fals "<<apScore<<" "<<nonRelJudgDocs[j]<<" , ";
+                                                            }
+                                                        }
+                                                        std::sort(apidrelDocs.begin(), apidrelDocs.end(), pairpairCompare);
+
                                                         delete qr;
                                                         qr = myMethod->computeQueryRep(*q);//update pure Query
 
-
-                                                        if(updatedDocForUpdating.size() < numOfFBDocs)
+                                                        int fbdocs = std::min((int)apidrelDocs.size(),numOfFBDocs);
+                                                        for(int k = 0 ; k < fbdocs; k++)
                                                         {
-                                                            cerr<<"relsize: "<<relJudgDocs.size()<<" updatedDocSize: "<<updatedDocForUpdating.size()<<endl;
-                                                            myMethod->updateProfile(*((TextQueryRep *)(qr)), updatedDocForUpdating, updatedDocForUpdatingScore, nonRelJudgDocs );
-                                                            lastNewRelSize4ProfUpdating = updatedDocForUpdating.size();
+                                                            updatedDocForUpdating.push_back(apidrelDocs[k].second.first);
+                                                            updatedDocForUpdatingScore.push_back(apidrelDocs[k].first);
+                                                            //cerr<<" "<<apidrelDocs[k].second.second<<" "<<apidrelDocs[k].second.first<<" "<<apidrelDocs[k].first<<" , ";
                                                         }
-                                                        else //sort
-                                                        {
-                                                            //cerr<<"\nELSE\n";
-                                                            vector<pair<double,int> > updatedDocs;
-                                                            for(int i = 0 ; i < updatedDocForUpdating.size() ; i++)
-                                                                updatedDocs.push_back(make_pair<double,int>(updatedDocForUpdatingScore[i], updatedDocForUpdating[i]) );
-
-                                                            std::sort(updatedDocs.begin(), updatedDocs.end(), pairCompare);
-
-                                                            vector<int>fbids;
-                                                            vector<double>fbScores;
-                                                            for(int i = 0 ; i < numOfFBDocs; i++)
-                                                            {
-                                                                fbids.push_back(updatedDocs[i].second);
-                                                                fbScores.push_back(updatedDocs[i].first);
-                                                                //cerr<<updatedDocs[i].second<<" "<<updatedDocs[i].first<<" , ";
-                                                            }
-                                                            //cerr<<endl;
-
-                                                            myMethod->updateProfile(*((TextQueryRep *)(qr)), fbids, fbScores, nonRelJudgDocs );
-                                                        }
+                                                    }else
+                                                    {
+                                                        updatedDocForUpdating.assign(relJudgDocs.begin(), relJudgDocs.end());
+                                                        updatedDocForUpdatingScore.assign(relJudgDocs.size(), 1.0);
                                                     }
+                                                    //cerr<<"\nrelsize: "<<relJudgDocs.size()<<" updatedDocSize: "<<updatedDocForUpdating.size()<<endl;
+                                                    myMethod->updateProfile(*((TextQueryRep *)(qr)), updatedDocForUpdating, updatedDocForUpdatingScore, nonRelJudgDocs );
                                                 }
                                             }
                                             else
@@ -510,7 +475,6 @@ void computeRSMethods(Index* ind)
 
                                             if(numberOfNotShownDocs == numOfnotShownDoc)//not show anything after |numOfnotShownDoc| docs! -->dec(thr)
                                             {
-
                                                 myMethod->updateThreshold(relJudgDocs , nonRelJudgDocs ,1);//dec thr
                                                 numberOfNotShownDocs = 0;
                                             }
