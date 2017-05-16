@@ -1212,8 +1212,8 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
             myDocCounter = new lemur::langmod::DocUnigramCounter(relJudgDoc[i], ind);
 
             //double klscore = scoreDoc(origRep , relJudgDoc[i]);
-            //klscore = std::pow(2.7, klscore);
-            double apScore = relJudgScore[i];
+            //double klscore = 1.0;//std::pow(2.7, relJudgScore[i]);
+            //double apScore = relJudgScore[i];
 
             //cerr<<relJudgDoc[i]<<" "<<apScore<<" \n";
 
@@ -1242,7 +1242,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
 
 
                     //score_ *= klscore;
-                    score_ *= apScore;
+                    //score_ *= apScore;
 
                     //if(ind.term(eventInd) == "the" || ind.term(eventInd) == "dope" || ind.term(eventInd) =="athlet" || ind.term(eventInd) == "health" || ind.term(eventInd) =="risk")
                     //cerr<<apScore<<" "<<ind.term(eventInd)<<" "<<score_<<" "<<TF<<" "<<DF<<" "<<" log: "<<log(1 + ((avgl)/docLength) )<<tf_w<<" "<<lambda_w<<endl;
