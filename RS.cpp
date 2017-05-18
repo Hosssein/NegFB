@@ -221,10 +221,10 @@ void computeRSMethods(Index* ind)
     else if (DATASET == 1)
         outFilename =outputFileNameHM+"_ohsu_";
 
-#define COMPAVG 0
-#define BASELINE 1
+#define COMPAVG 1
+#define BASELINE 0
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
+    string methodName = "_PureQ_LLWEAP_NonRel";//"ap-5-20-10-2";//;"LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
     outFilename += methodName;
     outFilename += "_lambda{0.1}_#perQuery:{10-50(15)}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
@@ -248,16 +248,19 @@ void computeRSMethods(Index* ind)
                 for(double SelectedWord4Q = 10; SelectedWord4Q <= 50 ; SelectedWord4Q += 15)//3 //v(10,25) for each query(whole)
                 {
                     double fbCoef = 0.1;//lambda
-                    //double topPos = 10;//n//c in rm1
-                    //double SelectedWord4Q = 30;
+                    //double topPos = 5;//n//c in rm1
+                    //double SelectedWord4Q = 10;
 
+                    double queryCoef = 0.2;
+                    const int numOfFBDocs = 10;
 
                     double alpha = -1;
-                    for(double c1 = 0.1 ; c1< 0.21 ;c1 += 0.05)//inc//3
-                    //double c1 = 0.2;
+
+                    for(double c1 = 0.1 ; c1< 0.16 ;c1 += 0.05)//inc//2
+                    //double c1 = 0.1;
                     {
                         myMethod->setC1(c1);
-                        for(double c2 = 0.01 ; c2 < 0.08 ; c2+=0.03)//dec //3
+                        for(double c2 = 0.01 ; c2 < 0.05 ; c2+=0.03)//dec //2
                         //double c2 = 0.04;
                         {
 
@@ -266,17 +269,15 @@ void computeRSMethods(Index* ind)
                             //for(int numOfShownNonRel = 2; numOfShownNonRel< 6; numOfShownNonRel+=3 )//2
                             int numOfShownNonRel = 2;
                             {
-                                for(int numOfnotShownDoc = 100 ;numOfnotShownDoc <= 401 ; numOfnotShownDoc+= 150)//3
+                                for(int numOfnotShownDoc = 100 ;numOfnotShownDoc <= 301 ; numOfnotShownDoc+= 150)//2
                                 //int numOfnotShownDoc = 250;
                                 {
-                                    const int numOfFBDocs = 10;
-
                                     myMethod->setThreshold(thresh);
                                     myMethod->setTop4EachQuery(SelectedWord4Q);//v//feedbackTermCount sets
                                     myMethod->setTopWords4EachQueryTerm(topPos);//n
 
                                     myMethod->topsCinRM1 = topPos;//c
-                                    //myMethod->setCoeffParam(fbCoef);/*****/set DEFAULT!!!!
+                                    myMethod->setCoeffParam(fbCoef);///*****/set DEFAULT!!!!
                                     myMethod->alphaCoef = alpha;
 
                                     //myMethod->setNumberOfPositiveSelectedTopWordAndFBcount(topPos);//n
@@ -288,7 +289,7 @@ void computeRSMethods(Index* ind)
 
 
                                     //myMethod->setThreshold(thresh);
-                                    out<<"threshold: "<<thresh<<" fbcoef: "<<fbCoef<<" alpha: "<<alpha<<" n: "<<topPos<<" v: "<<SelectedWord4Q<<" fbDocs: "<<numOfFBDocs<<endl ;
+                                    out<<"threshold: "<<thresh<<" fbcoef: "<<fbCoef<<" qcoef: "<<queryCoef<<" n: "<<topPos<<" v: "<<SelectedWord4Q<<" fbDocs: "<<numOfFBDocs<<endl ;
 
                                     IndexedRealVector results;
 
@@ -413,6 +414,7 @@ void computeRSMethods(Index* ind)
 #if BASELINE
                                                 if( results.size() % 5 == 0)
                                                 {
+                                                    //select/update with kl score(baseline)
                                                     updatedDocForUpdating.clear();
                                                     updatedDocForUpdatingScore.clear();
                                                     std::sort(bScoreIdisRel.begin(), bScoreIdisRel.end(), pairpairCompare);
@@ -432,6 +434,8 @@ void computeRSMethods(Index* ind)
                                                 //cerr<<endl;
 #endif
 #if !BASELINE
+
+#if 1
                                                 if (results.size() % 5 == 0 )
                                                 {
                                                     updatedDocForUpdating.clear();
@@ -443,18 +447,18 @@ void computeRSMethods(Index* ind)
                                                     {
                                                         std::sort(bScoreIdisRel.begin(), bScoreIdisRel.end(), pairpairCompare);
 
-                                                        for(int j = 0 ;j < relJudgDocs.size(); j++)//rel docs
+                                                        /*for(int j = 0 ;j < relJudgDocs.size(); j++)//rel docs
                                                         {
                                                             QueryRep *hqr = myMethod->computeQueryRep(*q);
                                                             double apScore = -10;
-                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, relJudgDocs[j] ,fbCoef, true, apScore);
+                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, relJudgDocs[j] ,queryCoef, true, apScore);
                                                             //delete hqr;
                                                             if(iflag)
                                                             {
                                                                 apidrelDocs.push_back(make_pair<double,pair<int, bool> >(apScore,make_pair<int,bool>(relJudgDocs[j],true) ));
                                                                 //cerr<<"true "<<apScore<<" "<<relJudgDocs[j]<<" , ";
                                                             }
-                                                        }
+                                                        }*/
 
                                                         //cerr<<"ss "<<nonRelJudgDocs.size();
                                                         for(int j = 0 ;j < nonRelJudgDocs.size(); j++)//nonRel docs
@@ -462,7 +466,7 @@ void computeRSMethods(Index* ind)
                                                             //cerr<<"nonREEEEELLL\n";
                                                             QueryRep *hqr = myMethod->computeQueryRep(*q);
                                                             double apScore = -10;
-                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, nonRelJudgDocs[j] ,fbCoef, false, apScore);
+                                                            bool iflag = myMethod->checkInformativeDoc( *((TextQueryRep*)(qr)), (TextQueryRep*)(hqr) ,relJudgDocs, nonRelJudgDocs, nonRelJudgDocs[j] ,queryCoef, false, apScore);
                                                             //delete hqr;
                                                             if(iflag)
                                                             {
@@ -472,28 +476,47 @@ void computeRSMethods(Index* ind)
                                                         }
                                                         std::sort(apidrelDocs.begin(), apidrelDocs.end(), pairpairCompare);
 
-                                                        delete qr;
-                                                        qr = myMethod->computeQueryRep(*q);//update pure Query
+                                                        //delete qr;
+                                                        //qr = myMethod->computeQueryRep(*q);//update pure Query
 
-                                                        int fbdocs = std::min((int)apidrelDocs.size(),numOfFBDocs);
+                                                        //only nonRel
+                                                        for(int k = 0 ; k < apidrelDocs.size() && updatedDocForUpdating.size() < numOfFBDocs ; k++)
+                                                        {
+                                                            if(apidrelDocs[k].second.second == false)
+                                                            {
+                                                                updatedDocForUpdating.push_back(apidrelDocs[k].second.first);
+                                                                updatedDocForUpdatingScore.push_back(apidrelDocs[k].first);
+                                                                //cerr<<" "<<apidrelDocs[k].second.second<<" "<<apidrelDocs[k].second.first<<" "<<apidrelDocs[k].first<<" , ";
+                                                            }
+                                                        }
+                                                        /*int fbdocs = std::min((int)apidrelDocs.size(),numOfFBDocs);
                                                         for(int k = 0 ; k < fbdocs; k++)
                                                         {
                                                             updatedDocForUpdating.push_back(apidrelDocs[k].second.first);
                                                             updatedDocForUpdatingScore.push_back(apidrelDocs[k].first);
                                                             cerr<<" "<<apidrelDocs[k].second.second<<" "<<apidrelDocs[k].second.first<<" "<<apidrelDocs[k].first<<" , ";
                                                         }
-                                                        cerr<<endl;
+                                                        cerr<<endl;*/
 
-                                                    }else
-                                                    {
-                                                        updatedDocForUpdating.assign(relJudgDocs.begin(), relJudgDocs.end());
-                                                        updatedDocForUpdatingScore.assign(relJudgDocs.size(), 1.0);
+                                                        if( updatedDocForUpdating.size() > 0 )
+                                                        {
+                                                            delete qr;
+                                                            qr = myMethod->computeQueryRep(*q);//update pure Query
+                                                            //cerr<<"relCnt "<<relJudgDocs.size()<<endl;
+                                                            myMethod->updateProfile(*((TextQueryRep *)(qr)), updatedDocForUpdating, updatedDocForUpdatingScore, nonRelJudgDocs );
+                                                        }
                                                     }
+                                                    //else
+                                                    //{
+                                                    //    updatedDocForUpdating.assign(relJudgDocs.begin(), relJudgDocs.end());
+                                                    //    updatedDocForUpdatingScore.assign(relJudgDocs.size(), 1.0);
+                                                    //}
 
                                                     //cerr<<"\nrelsize: "<<relJudgDocs.size()<<" updatedDocSize: "<<updatedDocForUpdating.size()<<endl;
-                                                    myMethod->updateProfile(*((TextQueryRep *)(qr)), updatedDocForUpdating, updatedDocForUpdatingScore, nonRelJudgDocs );
+                                                    //myMethod->updateProfile(*((TextQueryRep *)(qr)), updatedDocForUpdating, updatedDocForUpdatingScore, nonRelJudgDocs );
 
                                                 }
+#endif
 #endif
                                             }
                                             else

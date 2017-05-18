@@ -1190,7 +1190,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
 
     map<int , double> idProbMap;
     map<int , double >::iterator endMapIt = idProbMap.end();
-    //map<int, vector<double> >::iterator endIt = wordEmbedding.end();
+    map<int, vector<double> >::iterator endIt = wordEmbedding.end();
 
     const double avgl = ind.docLengthAvg();
     const double N = ind.docCount();
@@ -1204,6 +1204,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
         finalScoreIdVec.clear();
         idProbMap.clear();
 
+        cerr<<"\nBBBBB\n"<<relJudgDoc.size()<<endl;
         for(int i = 0 ; i < relJudgDoc.size() ; i++)
         {
             lemur::langmod::DocUnigramCounter *myDocCounter;
@@ -1213,7 +1214,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
 
             //double klscore = scoreDoc(origRep , relJudgDoc[i]);
             //double klscore = 1.0;//std::pow(2.7, relJudgScore[i]);
-            //double apScore = relJudgScore[i];
+            double apScore = relJudgScore[i];
 
             //cerr<<relJudgDoc[i]<<" "<<apScore<<" \n";
 
@@ -1226,11 +1227,12 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
                 double weight;
                 myDocCounter->nextCount(eventInd,weight);
 
-                //map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
-                //if( tempit != endIt )//found!
+                map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
+                if( tempit != endIt )//found!
                 {
-                    //vector<double> tt = tempit->second;
+                    vector<double> tt = tempit->second;
                     //double sc = cosineSim(queryTermsIdVec[ii].second , tt);
+                    double wesc = std::exp(cosineSim(Vq, tt));
 
                     double TF = weight;
 
@@ -1241,13 +1243,13 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
                     double score_ = log(( tf_w + lambda_w )/lambda_w );
 
 
+                    //if(ind.term(eventInd) == "the" ||ind.term(eventInd) == "that" || ind.term(eventInd) == "hgh" || ind.term(eventInd) == "wada" || ind.term(eventInd) == "dope" || ind.term(eventInd) =="fight" || ind.term(eventInd) == "sport" || ind.term(eventInd) =="legisl")
+                    //cerr<<apScore<<" "<<ind.term(eventInd)<<" "<<wesc<<" "<<score_<<" "<<wesc*score_*apScore<<" "<<TF<<" "<<DF<<" "<<" log: "<<log(1 + ((avgl)/docLength) )<<tf_w<<" "<<lambda_w<<endl;
+
+                    score_ *= wesc;
+                    score_ *= apScore;
+
                     //score_ *= klscore;
-                    //score_ *= apScore;
-
-                    //if(ind.term(eventInd) == "the" || ind.term(eventInd) == "dope" || ind.term(eventInd) =="athlet" || ind.term(eventInd) == "health" || ind.term(eventInd) =="risk")
-                    //cerr<<apScore<<" "<<ind.term(eventInd)<<" "<<score_<<" "<<TF<<" "<<DF<<" "<<" log: "<<log(1 + ((avgl)/docLength) )<<tf_w<<" "<<lambda_w<<endl;
-
-
                     //score_ *= exp(sc); //CHECK IT!!! (+1 removed)// [-1:1]->[0:2]
                     //score_ *=1/1+exp(-10.0*sc);
                     //score_ *= sc;
@@ -1336,7 +1338,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
 
 
 
-    /*cerr<<"before: ";
+    /*cerr<<"\nbefore: ";
     origRep.startIteration();
     while(origRep.hasMore())
     {
@@ -1345,11 +1347,12 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
     }
     cerr<<endl;*/
 
+
     QueryModel *qr = dynamic_cast<QueryModel *> (&origRep);
     lemur::langmod::MLUnigramLM *fblm = new lemur::langmod::MLUnigramLM(lmCounter, ind.termLexiconID());
     qr->interpolateWith(*fblm, (1-qryParam.fbCoeff), countPos/*qryParam.fbTermCount*/, qryParam.fbPrSumTh, qryParam.fbPrTh);
 
-    /*cerr<<"after: ";
+    /*cerr<<"\nafter: ";
     origRep.startIteration();
     while(origRep.hasMore())
     {
@@ -1767,6 +1770,7 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
 
 
     /*************************************************/
+
     vector<pair<double, int> >selectedWordProbId;
     const int N = ind.docCount();
     double avgl = ind.docLengthAvg();
@@ -1774,19 +1778,34 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
     myDocCounter = new lemur::langmod::DocUnigramCounter(docID, ind);
     double totalScore = 0;
     double docLength = ind.docLength( docID );
+    map<int, vector<double> >::iterator endIt = wordEmbedding.end();
     myDocCounter->startIteration();
     while(myDocCounter->hasMore())
     {
         int eventInd;
         double weight;
         myDocCounter->nextCount(eventInd,weight);
-        double TF = weight;
-        double DF = ind.docCount(eventInd);//df
-        double lambda_w = DF/N;
-        double tf_w = TF * log(1 + ((avgl)/docLength) ) ;
-        double score_ = log(( tf_w + lambda_w )/lambda_w  );
-        totalScore += score_;
-        selectedWordProbId.push_back(make_pair<double, int>(score_,eventInd));
+
+        map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
+        if( tempit != endIt )//found!
+        {
+            double TF = weight;
+            double DF = ind.docCount(eventInd);//df
+            double lambda_w = DF/N;
+            double tf_w = TF * log(1 + ((avgl)/docLength) ) ;
+            double score_ = log(( tf_w + lambda_w )/lambda_w  );
+
+            vector<double> tt = tempit->second;
+            double wesc = cosineSim(Vq , tt);
+
+
+            wesc = std::exp(wesc);
+
+            //cerr<<ind.term(eventInd)<<" "<<wesc<<" "<<score_<<" "<<wesc*score_<<endl;
+            score_ *= wesc;
+            totalScore += score_;
+            selectedWordProbId.push_back(make_pair<double, int>(score_,eventInd));
+        }
         //cerr<<TF<<" "<<docLength<<" "<<DF<<" "<<lambda_w<<" "<<tf_w<<" "<<score_<<endl;
     }
     delete myDocCounter;
@@ -1875,7 +1894,6 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
             return true;
         }
     }
-
     if(aAP > bAP)
     {
         apSc = aAP;
@@ -1888,6 +1906,14 @@ float lemur::retrieval::RetMethod::computeProfDocSim(lemur::api::TextQueryRep *t
                                                      vector<int> relJudgDoc ,vector<int> nonReljudgDoc , bool newNonRel , bool newRel)
 {
 #if 1
+    /*cerr<<"\nsim: ";
+    textQR->startIteration();
+    while(textQR->hasMore())
+    {
+        QueryTerm *qt = textQR->nextTerm();
+        cerr<<ind.term(qt->id())<<" "<<qt->weight()<<" , ";
+    }
+    cerr<<endl;*/
     double sc = scoreDoc(*textQR ,docID);
     //cerr<<sc<<" ";
     return sc;
