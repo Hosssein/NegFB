@@ -221,12 +221,12 @@ void computeRSMethods(Index* ind)
     else if (DATASET == 1)
         outFilename =outputFileNameHM+"_ohsu_";
 
-#define COMPAVG 1
+#define COMPAVG 0
 #define BASELINE 0
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "_PureQ_LLWEAP_NonRel";//"ap-5-20-10-2";//;"LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
+    string methodName = "_PureQ_LLAP_NonRel";//"ap-5-20-10-2";//;"LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
     outFilename += methodName;
-    outFilename += "_lambda{0.1}_#perQuery:{10-50(15)}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
+    outFilename += "_fbcoef{0.1}_qcoef{0.2}_#perQuery:{10,25}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
     ofstream out(outFilename.c_str());
 
@@ -245,7 +245,7 @@ void computeRSMethods(Index* ind)
         {
             for( double topPos = 5; topPos <=15 ; topPos += 10 )//2//15 khube //n(50,100) for each query term//c in RM1
             {
-                for(double SelectedWord4Q = 10; SelectedWord4Q <= 50 ; SelectedWord4Q += 15)//3 //v(10,25) for each query(whole)
+                for(double SelectedWord4Q = 10; SelectedWord4Q <= 30 ; SelectedWord4Q += 15)//2 //v(10,25) for each query(whole)
                 {
                     double fbCoef = 0.1;//lambda
                     //double topPos = 5;//n//c in rm1
