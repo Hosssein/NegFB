@@ -1190,7 +1190,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
 
     map<int , double> idProbMap;
     map<int , double >::iterator endMapIt = idProbMap.end();
-    //map<int, vector<double> >::iterator endIt = wordEmbedding.end();
+    map<int, vector<double> >::iterator endIt = wordEmbedding.end();
 
     const double avgl = ind.docLengthAvg();
     const double N = ind.docCount();
@@ -1227,12 +1227,12 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
                 double weight;
                 myDocCounter->nextCount(eventInd,weight);
 
-                //map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
-                //if( tempit != endIt )//found!
+                map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
+                if( tempit != endIt )//found!
                 {
-                    //vector<double> tt = tempit->second;
+                    vector<double> tt = tempit->second;
                     //double sc = cosineSim(queryTermsIdVec[ii].second , tt);
-                    //double wesc = std::exp(cosineSim(Vq, tt));
+                    double wesc = std::exp(cosineSim(Vq, tt));
 
                     double TF = weight;
 
@@ -1246,7 +1246,7 @@ void lemur::retrieval::RetMethod::updateProfile(lemur::api::TextQueryRep &origRe
                     //if(ind.term(eventInd) == "the" ||ind.term(eventInd) == "that" || ind.term(eventInd) == "hgh" || ind.term(eventInd) == "wada" || ind.term(eventInd) == "dope" || ind.term(eventInd) =="fight" || ind.term(eventInd) == "sport" || ind.term(eventInd) =="legisl")
                     //cerr<<apScore<<" "<<ind.term(eventInd)<<" "<<wesc<<" "<<score_<<" "<<wesc*score_*apScore<<" "<<TF<<" "<<DF<<" "<<" log: "<<log(1 + ((avgl)/docLength) )<<tf_w<<" "<<lambda_w<<endl;
 
-                    //score_ *= wesc;
+                    score_ *= wesc;
                     score_ *= apScore;
 
                     //score_ *= klscore;
@@ -1778,7 +1778,7 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
     myDocCounter = new lemur::langmod::DocUnigramCounter(docID, ind);
     double totalScore = 0;
     double docLength = ind.docLength( docID );
-    //map<int, vector<double> >::iterator endIt = wordEmbedding.end();
+    map<int, vector<double> >::iterator endIt = wordEmbedding.end();
     myDocCounter->startIteration();
     while(myDocCounter->hasMore())
     {
@@ -1786,8 +1786,8 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
         double weight;
         myDocCounter->nextCount(eventInd,weight);
 
-        //map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
-        //if( tempit != endIt )//found!
+        map<int, vector<double> >::iterator tempit = wordEmbedding.find(eventInd);
+        if( tempit != endIt )//found!
         {
             double TF = weight;
             double DF = ind.docCount(eventInd);//df
@@ -1795,14 +1795,14 @@ bool lemur::retrieval::RetMethod::checkInformativeDoc(lemur::api::TextQueryRep &
             double tf_w = TF * log(1 + ((avgl)/docLength) ) ;
             double score_ = log(( tf_w + lambda_w )/lambda_w  );
 
-            //vector<double> tt = tempit->second;
-           // double wesc = cosineSim(Vq , tt);
+            vector<double> tt = tempit->second;
+            double wesc = cosineSim(Vq , tt);
 
 
-            //wesc = std::exp(wesc);
+            wesc = std::exp(wesc);
 
             //cerr<<ind.term(eventInd)<<" "<<wesc<<" "<<score_<<" "<<wesc*score_<<endl;
-            //score_ *= wesc;
+            score_ *= wesc;
             totalScore += score_;
             selectedWordProbId.push_back(make_pair<double, int>(score_,eventInd));
         }

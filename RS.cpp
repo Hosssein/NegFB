@@ -221,12 +221,12 @@ void computeRSMethods(Index* ind)
     else if (DATASET == 1)
         outFilename =outputFileNameHM+"_ohsu_";
 
-#define COMPAVG 0
+#define COMPAVG 1
 #define BASELINE 0
     isRellNearest = false;//compute nearest from rell//used in comb..
-    string methodName = "_PureQ_LLAP_NonRel";//"ap-5-20-10-2";//;"LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
+    string methodName = "_PureQ_LLWEAP_NonRel";//"ap-5-20-10-2";//;"LL_KL_one";//"_PureQ_LL_APRelNonRel";//"BASELINE_one";//"_PureQ_LL_APRelNonRel"; //RM1(c=n=100)
     outFilename += methodName;
-    outFilename += "_fbcoef{0.1}_qcoef{0.2}_#perQuery:{10,25}_#top{5,15}_fbDocs:{10}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
+    outFilename += "_fbcoef{0.1}_qcoef{0.2}_#perQuery:{10,25}_#top{5,15}_fbDocs:{5}_res{15}";//_#perQuery:{10-25(15)}";topPos:{5-25(5)}//#perQuery:{10-25(15)}//_alpha[0.1-1(0.4)]//#fb{50}_//#perQuery:{10-25(15)}////_//#topPerQueryWord:{(50,100)}////c(50,100)_//// #topPosW:30-30(0)
 
     ofstream out(outFilename.c_str());
 
@@ -252,7 +252,7 @@ void computeRSMethods(Index* ind)
                     //double SelectedWord4Q = 10;
 
                     double queryCoef = 0.2;
-                    const int numOfFBDocs = 10;
+                    const int numOfFBDocs = 5;
 
                     double alpha = -1;
 
@@ -436,7 +436,7 @@ void computeRSMethods(Index* ind)
 #if !BASELINE
 
 #if 1
-                                                if (results.size() % 5 == 0 )
+                                                if ( results.size()  % 15 == 5 )
                                                 {
                                                     updatedDocForUpdating.clear();
                                                     updatedDocForUpdatingScore.clear();
@@ -445,6 +445,7 @@ void computeRSMethods(Index* ind)
 
                                                     if( relJudgDocs.size() > 1 && nonRelJudgDocs.size() > 0 )
                                                     {
+                                                        //cerr<<"bs: "<<bScoreIdisRel.size()<<endl;
                                                         std::sort(bScoreIdisRel.begin(), bScoreIdisRel.end(), pairpairCompare);
 
                                                         /*for(int j = 0 ;j < relJudgDocs.size(); j++)//rel docs
@@ -461,7 +462,7 @@ void computeRSMethods(Index* ind)
                                                         }*/
 
                                                         //cerr<<"ss "<<nonRelJudgDocs.size();
-                                                        for(int j = 0 ;j < nonRelJudgDocs.size(); j++)//nonRel docs
+                                                        for(int j = 0; j < nonRelJudgDocs.size(); j++)//nonRel docs
                                                         {
                                                             //cerr<<"nonREEEEELLL\n";
                                                             QueryRep *hqr = myMethod->computeQueryRep(*q);
@@ -474,6 +475,7 @@ void computeRSMethods(Index* ind)
                                                                 //cerr<<"fals "<<apScore<<" "<<nonRelJudgDocs[j]<<" , ";
                                                             }
                                                         }
+                                                        //cerr<<apidrelDocs.size()<<endl;
                                                         std::sort(apidrelDocs.begin(), apidrelDocs.end(), pairpairCompare);
 
                                                         //delete qr;
